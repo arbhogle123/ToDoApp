@@ -102,6 +102,7 @@ def register():
 @app.route("/home")
 @login_required
 def home():
+    global taskList
     if mycol.find({'user_mail': current_user.email}).count() == 0:
         return render_template("home.html", list="",name=current_user.email)
     pyobj = mycol.find({'user_mail': current_user.email}, {'_id': 0, 'list': 1})
@@ -125,6 +126,7 @@ def logout():
 # endpoint for storing todo item
 @app.route('/add-todo', methods=['POST'])
 def addTodo():
+    global taskList
     data = json.loads(request.data)  # load JSON data from request
     pusher.trigger('todo', 'item-added', data)  # trigger `item-added` event on `todo` channel
     task = {
@@ -141,6 +143,7 @@ def addTodo():
 
 @app.route('/modify-todo', methods=['POST'])
 def modifyTodo():
+    global taskList
     data = json.loads(request.data)  # load JSON data from request
     print(data.get('value'))
     if data.get('value') == "":
@@ -163,6 +166,7 @@ def modifyTodo():
 # endpoint for deleting todo item
 @app.route('/remove-todo/<item_id>')
 def removeTodo(item_id):
+    global taskList
     data = {'_id': item_id}
     pusher.trigger('todo', 'item-removed', data)
     for x in range(len(taskList)):
@@ -177,6 +181,7 @@ def removeTodo(item_id):
 # endpoint for updating todo item
 @app.route('/update-todo/<item_id>', methods=['POST'])
 def updateTodo(item_id):
+    global taskList
     data = {
         '_id': item_id,
         'completed': json.loads(request.data).get('completed', 0)
