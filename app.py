@@ -108,8 +108,7 @@ def home():
     pyobj = mycol.find({'user_mail': current_user.email}, {'_id': 0, 'list': 1})
     for x in pyobj:
         list = x['list']
-    for x in pyobj:
-        taskList.append(x)
+    taskList = list
     print(list)
     print(taskList)
     return render_template("home.html", list=list,name=current_user.email)
