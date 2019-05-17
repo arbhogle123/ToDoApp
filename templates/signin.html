@@ -18,20 +18,24 @@
       {% for message in form.password.errors %}
          <div>{{ message }}</div>
       {% endfor %}
+      
+      {% for message in form.confirm.errors %}
+         <div>{{ message }}</div>
+      {% endfor %}
         {%endif%}
     <div class="row">
         <form class="col s12" action="/signin" method="post">
             <div class="row">
                  <div class="input-field col s12">
-                        {{ form.email.label }}<br>
+                        {{ form.email.label }}
                         {{ form.email }}
                     </div>
                     <div class="input-field col s6">
-                        {{ form.password.label }}<br>
+                        {{ form.password.label }}
                         {{ form.password }}
                     </div>
                 <div class="input-field col s6">
-                        {{ form.confirm.label }}<br>
+                        {{ form.confirm.label }}
                         {{ form.confirm }}
                 </div>
                 <div class="input-field col s12">
