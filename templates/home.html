@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>To Do App</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+      .modify{
+          	position: absolute;
+            top: 0;
+            right: 60px;
+            bottom: 0;
+            width: auto;
+            height: fit-content;
+            margin: auto 0;
+            border-radius: 20px;
+            font-size: 30px;
+            color:#e1f5fe;
+            background-color: #cc9a9a;
+            margin-bottom: 11px;
+            transition: color 0.2s ease-out;
+      }
+      footer{
+          position:fixed;
+          bottom:10px;
+          font-size:30px;
+          text-align:center;
+        }
+    </style>
+  </head>
+  <body>
+    {% block content %}
+    <div class="container">
+      <section class="todoapp">
+        <header class="header">
+          <h1>ToDo App</h1>
+          <input class="new-todo" placeholder="What needs to be done?"
+            autofocus="" onkeypress="addItem(event)"/>
+        </header>
+
+        <section class="main">
+          <ul class="todo-list">
+            {%if list!="" %}
+              {% for x in list %}
+              {% set id = x.get('_id') %}
+              {% set completed = x.get('completed') %}
+              {% set value = x.get('value') %}
+              <li id="{{ id }}" {%if completed=="1" %} class="completed" {%endif%}>
+                <div class="view">
+                  <input class="toggle" type="checkbox" onclick="toggleComplete(this)"
+                    data-completed="{{ completed }}" data-id="{{ id }}">
+                  <label id="{{ id }}" contenteditable="true">{{ value }}</label>
+                  <button class="modify"  onclick="modifyItem('{{ id }}','{{value}}')" title="modify">+</button>
+                  <button class="destroy" onclick="removeItem('{{ id }}')"></button>
+                </div>
+              </li>
+              {%endfor%}
+            {%endif%}
+          </ul>
+        </section>
+        <footer class="footer"></footer>
+      </section>
+    </div>
+    <script src="https://js.pusher.com/4.1/pusher.min.js"></script>
+<footer>
+  <font color="#930101" style="font-size:30px;">{% if(name!='')%}You are login as <b>{{name}}</b></font><br><br>
+            <a href="{{ url_for('logout')}}" >Logout</a>{%endif%}
+</footer>
+    <script type="text/javascript">
+    // Enable pusher logging for debugging - don't include this in production
+        Pusher.logToConsole = true;
+
+        // configure pusher
+        const pusher = new Pusher('581bad5eae78e529bba7', {
+          cluster: 'ap2',
+          encrypted: true // optional
+        });
+
+        // subscribe to `todo` public channel, on which we'd be broadcasting events
+        const channel = pusher.subscribe('todo');
+
+        // listen for item-added events, and update todo list once event triggered
+        channel.bind('item-added', data => {
+          appendToList(data);
+        });
+
+        // listen for item-removed events
+        channel.bind('item-removed', data => {
+          let item = document.querySelector(`#${data._id}`);
+          item.parentNode.removeChild(item);
+        });
+
+        // listen for item-updated events
+        channel.bind('item-updated', data => {
+          let elem = document.querySelector(`#${data._id} .toggle`);
+          let item = document.querySelector(`#${data._id}`);
+          item.classList.toggle("completed");
+          elem.dataset.completed = data.completed;
+          elem.checked = data.completed == 1;
+        });
+</script>
+<script type="text/javascript">
+        // function that makes API call to add an item
+        function addItem(e) {
+          // if enter key is pressed on the form input, add new item
+          if (e.which == 13 || e.keyCode == 13) {
+            let item = document.querySelector('.new-todo');
+            fetch('/add-todo', {
+              method: 'post',
+              body: JSON.stringify({
+                id: `item-${Date.now()}`,
+                value: item.value,
+                completed: 0
+              })
+            })
+            .then(resp => {
+              // empty form input once a response is received
+              item.value = ""
+            });
+          }
+        }z
+
+        // function that makes API call to add an item
+        function modifyItem(previd,value) {
+            ids= 'label#'+previd;
+            let item = document.querySelector(ids).innerHTML;
+            if(!(item==value)){
+              fetch('/modify-todo', {
+                method: 'post',
+                body: JSON.stringify({
+                  id: previd,
+                  value: item,
+                  completed: 0
+                })
+              })
+              .then(resp => {
+                alert('Modified!')
+                item.value = value
+              });
+            }
+        }
+
+        // function that makes API call to remove an item
+        function removeItem(id) {
+          fetch(`/remove-todo/${id}`);
+        }
+
+        // function that makes API call to update an item
+        // toggles the state of the item between complete and
+        // incomplete states
+        function toggleComplete(elem) {
+          let id = elem.dataset.id,
+              completed = (elem.dataset.completed == "1" ? "0" : "1");
+          fetch(`/update-todo/${id}`, {
+            method: 'post',
+            body: JSON.stringify({ completed })
+          });
+        }
+
+        // helper function to append new ToDo item to current ToDo list
+        function appendToList(data) {
+          let html = `
+            <li id="${data.id}">
+              <div class="view">
+                <input class="toggle" type="checkbox" onclick="toggleComplete(this)"
+                  data-completed="${data.completed}" data-id="${data.id}">
+                <label id="${data.id}" contenteditable="true" >${data.value}</label>
+                <button class="modify" onclick="modifyItem('${data.id}','${data.value}')" title="modify">+</button>
+                <button class="destroy" onclick="removeItem('${data.id}')"></button>
+              </div>
+            </li>`;
+          let list = document.querySelector(".todo-list")
+          list.innerHTML += html;
+       };
+</script>
+
+    {% endblock %}
+  </body>
+</html>
