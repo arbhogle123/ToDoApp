@@ -75,7 +75,7 @@ def index():
             if check_user:
                 if check_password_hash(check_user['password'], form.password.data):
                     login_user(check_user)
-                    return render_template('home.html', name=current_user.email)
+                    return redirect(url_for('home'))
 
         return render_template('index.html', form=form,msg="Invalid Username-Password")
 
